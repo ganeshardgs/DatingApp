@@ -1,14 +1,13 @@
 using API.Data;
 using API.Entities;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MembersController(AppDbContext context) : ControllerBase // localhost:5001/api/members
+    
+    public class MembersController(AppDbContext context) : BaseApiController // localhost:5001/api/members
     {
         // GET: api/members
         [HttpGet]
@@ -16,16 +15,17 @@ namespace API.Controllers
         {
             var members = await context.Users.ToListAsync();
             if (members == null) return NotFound();
-            return Ok(members);
+            return members;
         }
 
         // GET: api/members/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<AppUser>> GetMember(string id)
         {
             var member = await context.Users.FindAsync(id);
             if (member == null) return NotFound();
-            return Ok(member);
+            return member;
         }
 
         // // POST: api/members
