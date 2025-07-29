@@ -2,6 +2,7 @@ using System;
 using API.Entities;
 using API.interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace API.Data;
 
@@ -14,7 +15,7 @@ public class MemberRepository(AppDbContext context) : IMemberRepository
 
     public async Task<Member?> GetMemberByIdAsync(string id)
     {
-         return await context.Members.FindAsync(id);
+        return await context.Members.FindAsync(id);
     }
 
     public async Task<IReadOnlyList<Photo>> GetPhotoForMembersAsync(string memberId)
@@ -25,11 +26,17 @@ public class MemberRepository(AppDbContext context) : IMemberRepository
 
     public async Task<bool> saveAllChanges()
     {
-         return await context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
 
     public void Update(Member member)
     {
         context.Entry(member).State = EntityState.Modified;
+    }
+
+    public async Task<Member?> GetMemberForUpdate(string id)
+    {
+        return await context.Members.Include(x => x.User)
+            .SingleOrDefaultAsync(x => x.Id == id);
     }
 }

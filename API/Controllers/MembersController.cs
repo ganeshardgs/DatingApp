@@ -1,5 +1,8 @@
+using System.Security.Claims;
 using API.Data;
+using API.DTOs;
 using API.Entities;
+using API.Extensions;
 using API.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +31,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}/photos")]
-        public async Task <ActionResult<IReadOnlyList<Photo>>> GetMemberPhotos(string id)
+        public async Task<ActionResult<IReadOnlyList<Photo>>> GetMemberPhotos(string id)
         {
             return Ok(await memberRepository.GetPhotoForMembersAsync(id));
         }
@@ -42,7 +45,26 @@ namespace API.Controllers
         // }
 
         // PUT: api/members/5
+        [HttpPut]
+        public async Task<ActionResult> UpdateMember(MemberUpdateDto memberUpdateDto)
+        {
+            var memberId = User.GetMemberId();
 
+            var member = await memberRepository.GetMemberForUpdate(memberId);
+            if (member == null) return BadRequest("Oops - could not fetch member");
+
+            member.DisplayName = memberUpdateDto.DisplayName ?? member.DisplayName;
+            member.Description = memberUpdateDto.Description ?? member.Description;
+            member.City = memberUpdateDto.City ?? member.City;
+            member.Country = memberUpdateDto.Country ?? member.Country;
+
+            member.User.DisplayName = memberUpdateDto.DisplayName ?? member.User.DisplayName;   
+
+            //memberRepository.Update(member); // optional
+
+            if (await memberRepository.saveAllChanges()) return NoContent();
+            return BadRequest("Failed to update the member");
+        }
 
     }
 }
